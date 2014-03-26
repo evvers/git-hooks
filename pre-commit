@@ -46,10 +46,13 @@ then
 	exit 1
 fi
 
+filesizelimit=$(git config hooks.filesizelimit | tr -cd '[0-9]')
+: ${filesizelimit:=1048576}
+
 git diff-index --cached --diff-filter=AM $against -z -- |
 perl -0777 -w -ne '
 BEGIN {
-$limit_size = 1048576;
+$limit_size = '$filesizelimit';
 %large_files;
 }
 
