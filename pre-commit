@@ -46,5 +46,32 @@ then
 	exit 1
 fi
 
+git diff-index --cached --diff-filter=AM $against -z -- |
+perl -0777 -w -ne '
+BEGIN {
+$limit_size = 1485760;
+%large_files;
+}
+
+while ( /:[^ ]+ [^ ]+ [^ ]+ ([^ ]+) [^\0]+\0([^\0]+)\0/g ) {
+	my ($index_sha, $file_name) = ($1, $2);
+	my $file_size = int(`git cat-file -s $index_sha`);
+	if ( $file_size >= $limit_size ) {
+		$large_files{$file_name} = $file_size;
+	}
+}
+
+END {
+if ( %large_files ) {
+	while ( my ($file_name, $file_size) = each %large_files ) {
+		print "Error: Attempt to add a large file\n";
+		print "File: $file_name, Size: ${file_size}b, Limit: ${limit_size}b\n";
+		print "\n";
+	}
+	exit(1)
+}
+}
+' || exit 1
+
 # If there are whitespace errors, print the offending file names and fail.
 exec git diff-index --check --cached $against --
