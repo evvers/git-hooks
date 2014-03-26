@@ -49,7 +49,7 @@ fi
 git diff-index --cached --diff-filter=AM $against -z -- |
 perl -0777 -w -ne '
 BEGIN {
-$limit_size = 1485760;
+$limit_size = 1048576;
 %large_files;
 }
 
